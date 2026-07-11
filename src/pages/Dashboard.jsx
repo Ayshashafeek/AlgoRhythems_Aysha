@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Music4, Users, CalendarDays, Sparkles, Lightbulb } from "lucide-react";
+import { Music4, Users, CalendarDays, Sparkles, Lightbulb,wand2 } from "lucide-react";
 import TopNav from "../components/TopNav.jsx";
 import FeatureCard from "../components/FeatureCard.jsx";
 import { recentActivity, accessibilityTips } from "../data/sampleData.js";
@@ -54,7 +54,15 @@ export default function Dashboard() {
               accent="violet"
             />
           </motion.div>
-
+          <motion.div variants={item}>
+            <FeatureCard
+              icon={Wand2}
+              title="Choreography Studio"
+              description="Upload a beat and mark new steps in sync with the rhythm — built for teachers designing choreography."
+              onClick={() => navigate("/choreography")}
+              accent="cyan"
+            />
+          </motion.div>
           <motion.div variants={item}>
             <FeatureCard
               icon={Users}
