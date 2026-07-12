@@ -53,7 +53,11 @@ export default function EventModal({
             </button>
 
             <button
-  onClick={() => navigate("/register")}
+  onClick={() =>
+    navigate("/register", {
+      state: { event },
+    })
+  }
   className="bg-cyan-600 px-5 py-2 rounded-lg hover:bg-cyan-500"
 >
   Register
