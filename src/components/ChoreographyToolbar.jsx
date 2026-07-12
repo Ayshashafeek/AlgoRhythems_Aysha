@@ -1,13 +1,34 @@
+import { useRef } from "react";
 import { motion } from "framer-motion";
 import { Music2, Play, Pause, RotateCcw, PlusCircle } from "lucide-react";
 
 export default function ChoreographyToolbar({
-  isPlaying, onStart, onPause, onReset, onAddStep,
+  isPlaying, onStart, onPause, onReset, onAddStep, onUploadSong, hasCustomSong,
 }) {
+  const inputRef = useRef(null);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) onUploadSong?.(file);
+    e.target.value = "";
+  };
+
   return (
     <div className="flex flex-wrap items-center gap-2.5">
-      <motion.button whileTap={{ scale: 0.95 }} className="btn-ghost !px-4 !py-2.5 text-sm">
-        <Music2 className="h-4 w-4" /> Upload Audio
+      <input
+        ref={inputRef}
+        type="file"
+        accept="audio/*"
+        hidden
+        onChange={handleFileChange}
+      />
+      <motion.button
+        whileTap={{ scale: 0.95 }}
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        className={`btn-ghost !px-4 !py-2.5 text-sm ${hasCustomSong ? "border-cyan-400/40 bg-cyan-400/10 text-cyan-300" : ""}`}
+      >
+        <Music2 className="h-4 w-4" /> {hasCustomSong ? "Audio Loaded" : "Upload Audio"}
       </motion.button>
 
       <motion.button

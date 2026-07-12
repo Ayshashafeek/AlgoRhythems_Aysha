@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Upload, Music2, Play, Pause, RotateCcw, Gauge, ListMusic } from "lucide-react";
 
@@ -13,13 +13,43 @@ export default function StudioToolbar({
   onSpeedChange,
   showLyrics,
   onToggleLyrics,
+  onUploadSong,
+  hasCustomSong,
 }) {
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+  const songInputRef = useRef(null);
+
+  const handleSongChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) onUploadSong?.(file);
+    e.target.value = "";
+  };
 
   return (
     <div className="flex flex-wrap items-center gap-2.5">
       <ToolbarButton icon={Upload} label="Upload Video" />
-      <ToolbarButton icon={Music2} label="Upload Song" hint="Future scope" />
+
+      <input
+        ref={songInputRef}
+        type="file"
+        accept="audio/*"
+        hidden
+        onChange={handleSongChange}
+      />
+      <motion.button
+        type="button"
+        whileTap={{ scale: 0.95 }}
+        onClick={() => songInputRef.current?.click()}
+        title="Upload a song — the bubble and video will follow it instead of the clip's own audio"
+        className={`flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition-colors ${
+          hasCustomSong
+            ? "border-cyan-400/40 bg-cyan-400/10 text-cyan-300"
+            : "border-white/10 bg-white/[0.04] text-slate-300 hover:bg-white/[0.09]"
+        }`}
+      >
+        <Music2 className="h-4 w-4" />
+        {hasCustomSong ? "Song Loaded" : "Upload Song"}
+      </motion.button>
 
       <motion.button
         whileTap={{ scale: 0.95 }}
@@ -90,12 +120,7 @@ export default function StudioToolbar({
 
 function ToolbarButton({ icon: Icon, label, hint }) {
   return (
-    <motion.button
-      type="button"
-      whileTap={{ scale: 0.95 }}
-      title={hint}
-      className="btn-ghost !px-4 !py-2.5 text-sm"
-    >
+    <motion.button type="button" whileTap={{ scale: 0.95 }} title={hint} className="btn-ghost !px-4 !py-2.5 text-sm">
       <Icon className="h-4 w-4" /> {label}
     </motion.button>
   );
