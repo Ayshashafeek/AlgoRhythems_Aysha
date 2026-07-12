@@ -68,7 +68,7 @@ export default function Dashboard() {
               icon={Users}
               title="Anonymous Community"
               description="Share progress, ask questions, and connect with other dancers without revealing your identity."
-              comingSoon
+              onClick={() => navigate("/community")}
               accent="cyan"
             />
           </motion.div>
