@@ -20,9 +20,9 @@ export default function Login() {
   return (
     <main className="relative flex min-h-screen w-full overflow-hidden">
       {/* ambient background accents */}
-      <div className="pointer-events-none absolute -left-40 top-[-10%] h-[520px] w-[520px] rounded-full bg-violet-600/20 blur-[120px]" />
-      <div className="pointer-events-none absolute -right-32 bottom-[-15%] h-[480px] w-[480px] rounded-full bg-cyan-500/10 blur-[120px]" />
-
+     <div className="pointer-events-none absolute -left-40 top-[-10%] h-[520px] w-[520px] rounded-full bg-violet-600/40 blur-[120px]" />
+<div className="pointer-events-none absolute -right-32 bottom-[-15%] h-[480px] w-[480px] rounded-full bg-cyan-500/30 blur-[120px]" />
+<div className="pointer-events-none absolute left-1/3 top-1/2 h-[400px] w-[400px] rounded-full bg-rose-500/20 blur-[130px]" />
       {/* left: illustration panel */}
       <div className="relative hidden w-1/2 items-center justify-center border-r border-white/5 lg:flex">
         <div className="relative z-10 flex h-full max-h-[640px] w-full max-w-lg flex-col items-center justify-center gap-8 px-10">
