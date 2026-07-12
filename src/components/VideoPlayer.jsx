@@ -2,16 +2,32 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Play, Pause, RotateCcw } from "lucide-react";
 
-// Placeholder/sample dance video for the prototype — no real media pipeline required.
+// Fallback sample dance video, used only if a video from the tutorial list isn't passed in.
 const SAMPLE_SRC =
   "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4";
 
-export default function VideoPlayer({ isPlaying, onPlayingChange, speed, resetKey, onLanding }) {
+export default function VideoPlayer({
+  isPlaying,
+  onPlayingChange,
+  speed,
+  resetKey,
+  onLanding,
+  src = SAMPLE_SRC,
+  title,
+}) {
   const videoRef = useRef(null);
   const [videoError, setVideoError] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [landingPulse, setLandingPulse] = useState(false);
+
+  // Whenever the selected video changes, drop any previous error state and
+  // restart playback state so the new clip loads cleanly.
+  useEffect(() => {
+    setVideoError(false);
+    setProgress(0);
+    setDuration(0);
+  }, [src]);
 
   useEffect(() => {
     const v = videoRef.current;
@@ -65,11 +81,13 @@ export default function VideoPlayer({ isPlaying, onPlayingChange, speed, resetKe
         />
         {!videoError ? (
           <video
+            key={src}
             ref={videoRef}
-            src={SAMPLE_SRC}
+            src={src}
             loop
             muted
             playsInline
+            autoPlay={isPlaying}
             onError={() => setVideoError(true)}
             onTimeUpdate={(e) => setProgress(e.currentTarget.currentTime)}
             onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
@@ -77,7 +95,12 @@ export default function VideoPlayer({ isPlaying, onPlayingChange, speed, resetKe
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-ink-800 to-ink-900">
-            <p className="text-sm text-slate-500">Sample dance video</p>
+            <p className="text-sm text-slate-500">Couldn't load "{title ?? "this video"}"</p>
+          </div>
+        )}
+        {title && (
+          <div className="pointer-events-none absolute left-4 top-4 rounded-full border border-white/10 bg-black/40 px-3 py-1 text-xs font-medium text-slate-200 backdrop-blur-sm">
+            {title}
           </div>
         )}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/70 to-transparent" />

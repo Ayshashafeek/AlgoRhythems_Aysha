@@ -5,10 +5,16 @@ import RhythmLane from "../components/RhythmLane.jsx";
 import VideoPlayer from "../components/VideoPlayer.jsx";
 import LyricsPanel from "../components/LyricsPanel.jsx";
 import StudioToolbar from "../components/StudioToolbar.jsx";
+import VideoList from "../components/VideoList.jsx";
+import { bharatanatyamVideos } from "../data/sampleData.js";
 
-const SPLIT_TRANSITION = { duration: 0.42, ease: [0.33, 0, 0.2, 1] };
+const SPLIT_TRANSITION = {
+  duration: 0.42,
+  ease: [0.33, 0, 0.2, 1],
+};
 
 export default function TrainingStudio() {
+  const [selectedVideo, setSelectedVideo] = useState(bharatanatyamVideos[0]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [showLyrics, setShowLyrics] = useState(false);
@@ -23,8 +29,19 @@ export default function TrainingStudio() {
   };
 
   const handleStart = () => setIsPlaying(true);
+
   const handlePause = () => setIsPlaying(false);
+
   const handleReset = () => {
+    setIsPlaying(false);
+    setFlash(false);
+    setResetKey((k) => k + 1);
+  };
+
+  const handleSelectVideo = (video) => {
+    if (video.id === selectedVideo.id) return;
+
+    setSelectedVideo(video);
     setIsPlaying(false);
     setFlash(false);
     setResetKey((k) => k + 1);
@@ -61,7 +78,22 @@ export default function TrainingStudio() {
             onToggleLyrics={() => setShowLyrics((s) => !s)}
           />
         </motion.div>
-        {/* seamless stage: beat lane(s) flow directly into the dance video, one glass surface */}
+
+        {/* Tutorial video selector */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.05 }}
+          className="mb-6"
+        >
+          <VideoList
+            videos={bharatanatyamVideos}
+            selectedId={selectedVideo.id}
+            onSelect={handleSelectVideo}
+          />
+        </motion.div>
+
+        {/* Rhythm lane + video player */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -80,6 +112,7 @@ export default function TrainingStudio() {
                 speed={speed}
                 onBeat={handleBeat}
                 resetKey={resetKey}
+                beatTimeline={selectedVideo.beatTimeline}
               />
             </motion.div>
 
@@ -93,12 +126,14 @@ export default function TrainingStudio() {
                   transition={SPLIT_TRANSITION}
                   className="relative h-full min-w-0 overflow-hidden"
                 >
-                  <LyricsPanel isPlaying={isPlaying} resetKey={resetKey} />
+                  <LyricsPanel
+                    isPlaying={isPlaying}
+                    resetKey={resetKey}
+                  />
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* glowing target line — exactly where the beat area meets the video */}
             <div
               className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[3px] transition-all duration-150"
               style={{
@@ -119,6 +154,8 @@ export default function TrainingStudio() {
               speed={speed}
               resetKey={resetKey}
               onLanding={lastBeat}
+              src={selectedVideo.src}
+              title={selectedVideo.title}
             />
           </div>
         </motion.div>
@@ -129,7 +166,8 @@ export default function TrainingStudio() {
           transition={{ delay: 0.3 }}
           className="mt-4 text-center text-xs text-slate-500"
         >
-          Beat markers fall in sync with the choreography — no sound required to follow the timing.
+          Beat markers fall in sync with the choreography — no sound required to
+          follow the timing.
         </motion.p>
       </main>
     </div>

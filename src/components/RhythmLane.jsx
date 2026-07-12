@@ -2,13 +2,19 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import BeatMarker from "./BeatMarker.jsx";
 import ImpactRipple from "./ImpactRipple.jsx";
-import { beatTimeline } from "../data/sampleData.js";
+import { beatTimeline as defaultBeatTimeline } from "../data/sampleData.js";
 
 const LANES = 4;
 const LANE_COLORS = ["#9b8cff", "#22d3ee", "#7c5cfc", "#4fe0dd"];
 const FALL_DURATION = 2.2; // seconds to travel the full lane height at 1x speed
 
-export default function RhythmLane({ isPlaying, speed = 1, onBeat, resetKey }) {
+export default function RhythmLane({
+  isPlaying,
+  speed = 1,
+  onBeat,
+  resetKey,
+  beatTimeline = defaultBeatTimeline,
+}) {
   const [markers, setMarkers] = useState([]);
   const [ripples, setRipples] = useState([]);
   const timeouts = useRef([]);
@@ -69,7 +75,7 @@ export default function RhythmLane({ isPlaying, speed = 1, onBeat, resetKey }) {
       timeouts.current = [];
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPlaying, speed, resetKey]);
+  }, [isPlaying, speed, resetKey, beatTimeline]);
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-gradient-to-b from-ink-800/40 via-ink-800/20 to-transparent">
