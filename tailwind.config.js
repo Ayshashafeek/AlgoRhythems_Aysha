@@ -4,37 +4,56 @@ export default {
   theme: {
     extend: {
       colors: {
-        // neutrals — off-white base, warm white cards, charcoal text
-        cream: {
-          50: "#FFFBF5",   // page background
-          100: "#FFF6EC",
-          200: "#FDEFDD",  // subtle section tint
-        },
         ink: {
-          900: "#231F20",  // primary text (not pure black)
-          700: "#4A4340",
-          500: "#786F6B",  // muted/secondary text
-          300: "#B8AEA9",  // borders, dividers
-          100: "#EDE6E1",
+          950: "#08070c",
+          900: "#0c0a14",
+          800: "#13111e",
+          700: "#1b1829",
+          600: "#241f36",
         },
-        // festive accents
-        saffron: { 400: "#FF9933", 500: "#FF7A00", 600: "#E86A00" },
-        peacock: { 400: "#1CA9A0", 500: "#0F7A78", 600: "#0B5E5C" },
-        lotus:   { 400: "#F472B6", 500: "#EC4899", 600: "#D6317E" },
-        marigold:{ 400: "#FDB022", 500: "#F59E0B", 600: "#DC8A05" },
-        turmeric:{ 400: "#FFD23F", 500: "#FBBF24", 600: "#E8A90E" },
-        leaf:    { 400: "#4ADE80", 500: "#16A34A", 600: "#0E7C39" },
-        plum:    { 400: "#A78BFA", 500: "#8B5CF6", 600: "#7440E0" },
+        violet: {
+          400: "#9b8cff",
+          500: "#7c5cfc",
+          600: "#6842f0",
+          700: "#5731d1",
+        },
+        cyan: {
+          300: "#8ff0ee",
+          400: "#4fe0dd",
+          500: "#22d3ee",
+        },
       },
       fontFamily: {
         heading: ["Poppins", "sans-serif"],
         body: ["Inter", "sans-serif"],
       },
       boxShadow: {
-        card: "0 4px 20px rgba(35, 31, 32, 0.06)",
-        "card-hover": "0 8px 28px rgba(35, 31, 32, 0.1)",
+        glow: "0 0 40px -10px rgba(124, 92, 252, 0.45)",
+        "glow-cyan": "0 0 40px -10px rgba(34, 211, 238, 0.4)",
+        card: "0 8px 30px rgba(0,0,0,0.35)",
       },
-      borderRadius: { xl2: "20px", xl3: "24px" },
+      backgroundImage: {
+        "grid-glow":
+          "radial-gradient(circle at 20% 0%, rgba(124,92,252,0.18), transparent 45%), radial-gradient(circle at 85% 10%, rgba(34,211,238,0.12), transparent 40%)",
+      },
+      borderRadius: {
+        xl2: "20px",
+        xl3: "24px",
+      },
+      keyframes: {
+        fall: {
+          "0%": { transform: "translateY(-10%)", opacity: "0" },
+          "10%": { opacity: "1" },
+          "100%": { transform: "translateY(560px)", opacity: "1" },
+        },
+        pulseRing: {
+          "0%": { boxShadow: "0 0 0 0 rgba(124,92,252,0.55)" },
+          "100%": { boxShadow: "0 0 0 18px rgba(124,92,252,0)" },
+        },
+      },
+      animation: {
+        pulseRing: "pulseRing 1.4s ease-out infinite",
+      },
     },
   },
   plugins: [],
