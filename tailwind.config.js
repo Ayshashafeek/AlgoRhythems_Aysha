@@ -4,66 +4,37 @@ export default {
   theme: {
     extend: {
       colors: {
-        // deep magenta-plum instead of near-black — still dark enough for contrast,
-        // but reads as a color, not "off"
+        // neutrals — off-white base, warm white cards, charcoal text
+        cream: {
+          50: "#FFFBF5",   // page background
+          100: "#FFF6EC",
+          200: "#FDEFDD",  // subtle section tint
+        },
         ink: {
-          950: "#2a0a1e",
-          900: "#380f28",
-          800: "#481533",
-          700: "#5a1d40",
-          600: "#6e254e",
+          900: "#231F20",  // primary text (not pure black)
+          700: "#4A4340",
+          500: "#786F6B",  // muted/secondary text
+          300: "#B8AEA9",  // borders, dividers
+          100: "#EDE6E1",
         },
-        // saffron/marigold, pushed more saturated and warm
-        violet: {
-          400: "#ffb347",
-          500: "#ff8c1a",
-          600: "#f2670a",
-          700: "#cc5200",
-        },
-        // peacock teal, brightened
-        cyan: {
-          300: "#4de8d1",
-          400: "#14cbb0",
-          500: "#0aa693",
-        },
-        // new: ruby/magenta — the missing third accent, this is what will
-        // make it feel "festival" rather than "muted dashboard"
-        rose: {
-          400: "#ff5ca8",
-          500: "#ec2f7b",
-          600: "#c81a63",
-        },
-        gold: {
-          400: "#ffd166",
-          500: "#f4b942",
-        },
-        maroon: {
-          500: "#7a1f2b",
-          600: "#5e1520",
-        },
+        // festive accents
+        saffron: { 400: "#FF9933", 500: "#FF7A00", 600: "#E86A00" },
+        peacock: { 400: "#1CA9A0", 500: "#0F7A78", 600: "#0B5E5C" },
+        lotus:   { 400: "#F472B6", 500: "#EC4899", 600: "#D6317E" },
+        marigold:{ 400: "#FDB022", 500: "#F59E0B", 600: "#DC8A05" },
+        turmeric:{ 400: "#FFD23F", 500: "#FBBF24", 600: "#E8A90E" },
+        leaf:    { 400: "#4ADE80", 500: "#16A34A", 600: "#0E7C39" },
+        plum:    { 400: "#A78BFA", 500: "#8B5CF6", 600: "#7440E0" },
       },
       fontFamily: {
         heading: ["Poppins", "sans-serif"],
         body: ["Inter", "sans-serif"],
       },
       boxShadow: {
-        glow: "0 0 50px -8px rgba(255, 140, 26, 0.6)",
-        "glow-cyan": "0 0 50px -8px rgba(20, 203, 176, 0.55)",
-        "glow-rose": "0 0 50px -8px rgba(236, 47, 123, 0.55)",
-        card: "0 8px 30px rgba(0,0,0,0.4)",
-      },
-      backgroundImage: {
-        "grid-glow":
-          "radial-gradient(circle at 15% 0%, rgba(255,140,26,0.35), transparent 45%), radial-gradient(circle at 85% 15%, rgba(20,203,176,0.28), transparent 45%), radial-gradient(circle at 50% 100%, rgba(236,47,123,0.22), transparent 50%)",
+        card: "0 4px 20px rgba(35, 31, 32, 0.06)",
+        "card-hover": "0 8px 28px rgba(35, 31, 32, 0.1)",
       },
       borderRadius: { xl2: "20px", xl3: "24px" },
-      keyframes: {
-        pulseRing: {
-          "0%": { boxShadow: "0 0 0 0 rgba(255,140,26,0.55)" },
-          "100%": { boxShadow: "0 0 0 18px rgba(255,140,26,0)" },
-        },
-      },
-      animation: { pulseRing: "pulseRing 1.4s ease-out infinite" },
     },
   },
   plugins: [],
