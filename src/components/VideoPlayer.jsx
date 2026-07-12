@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Play, Pause, RotateCcw } from "lucide-react";
 
@@ -6,16 +6,23 @@ import { Play, Pause, RotateCcw } from "lucide-react";
 const SAMPLE_SRC =
   "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4";
 
-export default function VideoPlayer({
-  isPlaying,
-  onPlayingChange,
-  speed,
-  resetKey,
-  onLanding,
-  src = SAMPLE_SRC,
-  title,
-}) {
+const VideoPlayer = forwardRef(function VideoPlayer(
+  {
+    isPlaying,
+    onPlayingChange,
+    speed,
+    resetKey,
+    onLanding,
+    onTimeUpdate,
+    onLoadedMetadata,
+    src = SAMPLE_SRC,
+    title,
+    muted = false,
+  },
+  forwardedRef
+) {
   const videoRef = useRef(null);
+  useImperativeHandle(forwardedRef, () => videoRef.current, []);
   const [videoError, setVideoError] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -84,13 +91,28 @@ export default function VideoPlayer({
             key={src}
             ref={videoRef}
             src={src}
+            muted={muted}
             loop
-            muted
             playsInline
             autoPlay={isPlaying}
             onError={() => setVideoError(true)}
-            onTimeUpdate={(e) => setProgress(e.currentTarget.currentTime)}
-            onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+            onTimeUpdate={(e) => {
+  const time = e.currentTarget.currentTime;
+  setProgress(time);
+
+  if (onTimeUpdate) {
+    onTimeUpdate(time);
+  }
+}}
+
+onLoadedMetadata={(e) => {
+  const duration = e.currentTarget.duration;
+  setDuration(duration);
+
+  if (onLoadedMetadata) {
+    onLoadedMetadata(duration);
+  }
+}}
             className="h-full w-full object-cover"
           />
         ) : (
@@ -152,7 +174,9 @@ export default function VideoPlayer({
       </div>
     </div>
   );
-}
+});
+
+export default VideoPlayer;
 
 function formatTime(t) {
   if (!t || Number.isNaN(t)) return "0:00";

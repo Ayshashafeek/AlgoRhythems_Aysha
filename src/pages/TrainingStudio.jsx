@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import TopNav from "../components/TopNav.jsx";
-import RhythmLane from "../components/RhythmLane.jsx";
+import BeatBubble from "../components/BeatBubble.jsx";
 import VideoPlayer from "../components/VideoPlayer.jsx";
 import LyricsPanel from "../components/LyricsPanel.jsx";
 import StudioToolbar from "../components/StudioToolbar.jsx";
 import VideoList from "../components/VideoList.jsx";
 import { bharatanatyamVideos } from "../data/sampleData.js";
+import { useBeatDetector } from "../hooks/useBeatDetector.js";
 
 const SPLIT_TRANSITION = {
   duration: 0.42,
@@ -21,15 +22,74 @@ export default function TrainingStudio() {
   const [resetKey, setResetKey] = useState(0);
   const [flash, setFlash] = useState(false);
   const [lastBeat, setLastBeat] = useState(0);
+  const [audioSrc, setAudioSrc] = useState(null); // uploaded-song object URL, if any
+  const [timelineBeatEvent, setTimelineBeatEvent] = useState(null);
+  const timelineIndexRef = useRef(0);
+  const timelineCycleRef = useRef(0);
+  const timelineLastTimeRef = useRef(0);
+  const timelineNextBeatRef = useRef(0);
 
-  const handleBeat = () => {
+  const videoRef = useRef(null);
+  const audioRef = useRef(null);
+
+  // If a song is uploaded we analyze THAT for beats and mute the video (so
+  // you don't hear both at once); otherwise we use the precomputed Alarippu
+  // timeline and repeat the beat pattern throughout the clip.
+  const beatSourceRef = audioSrc ? audioRef : videoRef;
+  const detectedBeatEvent = useBeatDetector(beatSourceRef, isPlaying, audioSrc ?? selectedVideo.id);
+  const beatTimeline = selectedVideo.beatTimeline ?? [];
+  const beatInterval =
+    beatTimeline.length > 1
+      ? beatTimeline.slice(1).reduce((sum, t, idx) => sum + (t - beatTimeline[idx]), 0) / (beatTimeline.length - 1)
+      : 0.8;
+  const beatStartTime = beatTimeline[0] ?? 0;
+  const useTimeline = !audioSrc && beatTimeline.length > 0;
+  const beatEvent = useTimeline ? timelineBeatEvent || detectedBeatEvent : detectedBeatEvent;
+
+  useEffect(() => {
+    timelineIndexRef.current = 0;
+    timelineCycleRef.current = 0;
+    timelineLastTimeRef.current = 0;
+    timelineNextBeatRef.current = beatStartTime;
+    setTimelineBeatEvent(null);
+  }, [selectedVideo.id, resetKey, beatTimeline]);
+
+  // Flash feedback whenever a beat fires (landing glow + accent bar).
+  useEffect(() => {
+    if (!beatEvent) return;
     setFlash(true);
     setLastBeat((n) => n + 1);
-    setTimeout(() => setFlash(false), 220);
-  };
+    const t = setTimeout(() => setFlash(false), 220);
+    return () => clearTimeout(t);
+  }, [beatEvent]);
+
+  // Keep the uploaded song locked to the same play/pause/speed/position as
+  // the video, so the bubble and the dance clip stay in sync.
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (isPlaying) a.play().catch(() => {});
+    else a.pause();
+  }, [isPlaying, audioSrc]);
+
+  useEffect(() => {
+    const a = audioRef.current;
+    if (a) a.playbackRate = speed;
+  }, [speed, audioSrc]);
+
+  useEffect(() => {
+    const a = audioRef.current;
+    if (a) a.currentTime = 0;
+  }, [resetKey, audioSrc]);
+
+  // Release the previous object URL when it's replaced or on unmount.
+  useEffect(() => {
+    return () => {
+      if (audioSrc) URL.revokeObjectURL(audioSrc);
+    };
+  }, [audioSrc]);
 
   const handleStart = () => setIsPlaying(true);
-
   const handlePause = () => setIsPlaying(false);
 
   const handleReset = () => {
@@ -40,10 +100,18 @@ export default function TrainingStudio() {
 
   const handleSelectVideo = (video) => {
     if (video.id === selectedVideo.id) return;
-
     setSelectedVideo(video);
     setIsPlaying(false);
     setFlash(false);
+    setResetKey((k) => k + 1);
+  };
+
+  const handleUploadSong = (file) => {
+    setAudioSrc((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
+    setIsPlaying(false);
     setResetKey((k) => k + 1);
   };
 
@@ -76,10 +144,11 @@ export default function TrainingStudio() {
             onSpeedChange={setSpeed}
             showLyrics={showLyrics}
             onToggleLyrics={() => setShowLyrics((s) => !s)}
+            onUploadSong={handleUploadSong}
+            hasCustomSong={!!audioSrc}
           />
         </motion.div>
 
-        {/* Tutorial video selector */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -93,72 +162,95 @@ export default function TrainingStudio() {
           />
         </motion.div>
 
-        {/* Rhythm lane + video player */}
+        {/* Split view: dance video (square) | beat bubble */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.1 }}
           className="glass relative overflow-hidden rounded-xl3 shadow-card"
         >
-          <div className="relative flex h-[260px] sm:h-[320px]">
-            <motion.div
-              layout
-              transition={SPLIT_TRANSITION}
-              className="relative h-full min-w-0"
-              style={{ flex: showLyrics ? "1 1 58%" : "1 1 100%" }}
-            >
-              <RhythmLane
+          <div className="grid grid-cols-1 md:grid-cols-2">
+            <div className="aspect-square w-full">
+              <VideoPlayer
+                ref={videoRef}
                 isPlaying={isPlaying}
+                onPlayingChange={setIsPlaying}
                 speed={speed}
-                onBeat={handleBeat}
                 resetKey={resetKey}
-                beatTimeline={selectedVideo.beatTimeline}
+                onLanding={lastBeat}
+                onTimeUpdate={(time) => {
+                  if (!useTimeline) return;
+                  const timeline = selectedVideo.beatTimeline || [];
+                  const interval = beatInterval || 0.8;
+
+                  // If the current time has gone backward or the video restarted, reset
+                  if (time < timelineLastTimeRef.current) {
+                    timelineIndexRef.current = 0;
+                    timelineCycleRef.current = 0;
+                    timelineNextBeatRef.current = timeline[0] ?? 0;
+                  }
+
+                  timelineLastTimeRef.current = time;
+
+                  while (timeline.length > 0 && time >= timelineNextBeatRef.current) {
+                    setTimelineBeatEvent({
+                      time: Date.now(),
+                      count: ((timelineIndexRef.current % 8) + 1),
+                    });
+
+                    timelineIndexRef.current += 1;
+                    if (timelineIndexRef.current >= timeline.length) {
+                      timelineIndexRef.current = 0;
+                      timelineCycleRef.current += 1;
+                    }
+
+                    timelineNextBeatRef.current =
+                      (timeline[timelineIndexRef.current] ?? 0) + timelineCycleRef.current * interval;
+                  }
+                }}
+                src={selectedVideo.src}
+                title={selectedVideo.title}
+                muted={!!audioSrc}
               />
-            </motion.div>
-
-            <AnimatePresence>
-              {showLyrics && (
-                <motion.div
-                  key="lyrics-split"
-                  initial={{ flex: "0 0 0%", opacity: 0 }}
-                  animate={{ flex: "0 0 42%", opacity: 1 }}
-                  exit={{ flex: "0 0 0%", opacity: 0 }}
-                  transition={SPLIT_TRANSITION}
-                  className="relative h-full min-w-0 overflow-hidden"
-                >
-                  <LyricsPanel
-                    isPlaying={isPlaying}
-                    resetKey={resetKey}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <div
-              className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[3px] transition-all duration-150"
-              style={{
-                background: flash
-                  ? "linear-gradient(90deg, #fff, #c9bfff, #7dd8ee, #fff)"
-                  : "linear-gradient(90deg, #7c5cfc, #22d3ee)",
-                boxShadow: flash
-                  ? "0 0 26px 6px rgba(255,255,255,0.55)"
-                  : "0 0 16px 2px rgba(124,92,252,0.45)",
-              }}
-            />
+            </div>
+            <div className="aspect-square w-full border-t border-white/5 md:border-l md:border-t-0">
+              <BeatBubble beatEvent={beatEvent} isPlaying={isPlaying} />
+            </div>
           </div>
 
-          <div className="h-[340px] sm:h-[400px]">
-            <VideoPlayer
-              isPlaying={isPlaying}
-              onPlayingChange={setIsPlaying}
-              speed={speed}
-              resetKey={resetKey}
-              onLanding={lastBeat}
-              src={selectedVideo.src}
-              title={selectedVideo.title}
-            />
-          </div>
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[3px] transition-all duration-150"
+            style={{
+              background: flash
+                ? "linear-gradient(90deg, #fff, #c9bfff, #7dd8ee, #fff)"
+                : "linear-gradient(90deg, #7c5cfc, #22d3ee)",
+              boxShadow: flash
+                ? "0 0 26px 6px rgba(255,255,255,0.55)"
+                : "0 0 16px 2px rgba(124,92,252,0.45)",
+            }}
+          />
         </motion.div>
+
+        {/* Lyrics — full width, below both panels */}
+        <AnimatePresence>
+          {showLyrics && (
+            <motion.div
+              key="lyrics-below"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={SPLIT_TRANSITION}
+              className="mt-4 overflow-hidden"
+            >
+              <div className="glass h-[260px] rounded-xl3 sm:h-[300px]">
+                <LyricsPanel isPlaying={isPlaying} resetKey={resetKey} />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Hidden element that plays an uploaded song in lockstep with the video */}
+        {audioSrc && <audio ref={audioRef} src={audioSrc} loop hidden />}
 
         <motion.p
           initial={{ opacity: 0 }}
@@ -166,8 +258,8 @@ export default function TrainingStudio() {
           transition={{ delay: 0.3 }}
           className="mt-4 text-center text-xs text-slate-500"
         >
-          Beat markers fall in sync with the choreography — no sound required to
-          follow the timing.
+          The bubble lights up in sync with the music — slow the speed down
+          and the lights slow with it, no sound required to follow the timing.
         </motion.p>
       </main>
     </div>
